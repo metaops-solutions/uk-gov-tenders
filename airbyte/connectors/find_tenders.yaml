@@ -1,0 +1,370 @@
+spec:
+  type: Spec
+  connection_specification:
+    type: object
+    $schema: http://json-schema.org/draft-07/schema#
+    required: []
+    properties: {}
+    additionalProperties: true
+type: DeclarativeSource
+check:
+  type: CheckStream
+  stream_names:
+    - tenders
+streams:
+  - name: tenders
+    type: DeclarativeStream
+    retriever:
+      type: SimpleRetriever
+      paginator:
+        type: DefaultPaginator
+        page_token_option:
+          type: RequestPath
+        pagination_strategy:
+          type: CursorPagination
+          cursor_value: '{{ response.get("links", {}).get("next", {}) }}'
+          stop_condition: '{{ not response.get("links", {}).get("next", {}) }}'
+      requester:
+        path: api/1.0/ocdsReleasePackages
+        type: HttpRequester
+        url_base: https://www.find-tender.service.gov.uk/
+        http_method: GET
+        authenticator:
+          type: NoAuth
+        request_headers: {}
+        request_body_json: {}
+        request_parameters:
+          updatedFrom: >-
+            {{ (today_utc() - duration('P0DT1H')).strftime('%Y-%m-%dT%H:%M:%SZ')
+            }}
+      record_selector:
+        type: RecordSelector
+        extractor:
+          type: DpathExtractor
+          field_path:
+            - releases
+      partition_router: []
+    primary_key:
+      - id
+    schema_loader:
+      type: InlineSchemaLoader
+      schema:
+        type: object
+        $schema: http://json-schema.org/schema#
+        properties:
+          id:
+            type: string
+          tag:
+            type: array
+            items:
+              type: string
+          date:
+            type: string
+          ocid:
+            type: string
+          buyer:
+            type: object
+            properties:
+              id:
+                type: string
+              name:
+                type: string
+          title:
+            type: string
+          awards:
+            type: array
+            items:
+              type: object
+              properties:
+                id:
+                  type: string
+                date:
+                  type: string
+                value:
+                  type: object
+                  properties:
+                    amount:
+                      type: number
+                    currency:
+                      type: string
+                status:
+                  type: string
+                documents:
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      id:
+                        type: string
+                      url:
+                        type: string
+                      format:
+                        type: string
+                      language:
+                        type: string
+                      description:
+                        type: string
+                      dateModified:
+                        type: string
+                      documentType:
+                        type: string
+                      datePublished:
+                        type: string
+                suppliers:
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      id:
+                        type: string
+                      name:
+                        type: string
+                description:
+                  type: string
+                datePublished:
+                  type: string
+                contractPeriod:
+                  type: object
+                  properties:
+                    endDate:
+                      type: string
+                    startDate:
+                      type: string
+          tender:
+            type: object
+            properties:
+              id:
+                type: string
+              items:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    id:
+                      type: string
+                    deliveryAddresses:
+                      type: array
+                      items:
+                        type: object
+                        properties:
+                          region:
+                            type: string
+                          postalCode:
+                            type: string
+                          countryName:
+                            type: string
+              title:
+                type: string
+              value:
+                type: object
+                properties:
+                  amount:
+                    type: number
+                  currency:
+                    type: string
+              status:
+                type: string
+              minValue:
+                type: object
+                properties:
+                  amount:
+                    type: number
+                  currency:
+                    type: string
+              documents:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    id:
+                      type: string
+                    url:
+                      type: string
+                    format:
+                      type: string
+                    language:
+                      type: string
+                    description:
+                      type: string
+                    dateModified:
+                      type: string
+                    documentType:
+                      type: string
+                    datePublished:
+                      type: string
+              description:
+                type: string
+              suitability:
+                type: object
+                properties:
+                  sme:
+                    type: boolean
+                  vcse:
+                    type: boolean
+              tenderPeriod:
+                type: object
+                properties:
+                  endDate:
+                    type: string
+              communication:
+                type: object
+                properties:
+                  futureNoticeDate:
+                    type: string
+              datePublished:
+                type: string
+              classification:
+                type: object
+                properties:
+                  id:
+                    type: string
+                  scheme:
+                    type: string
+                  description:
+                    type: string
+              contractPeriod:
+                type: object
+                properties:
+                  endDate:
+                    type: string
+                  startDate:
+                    type: string
+              procurementMethod:
+                type: string
+              mainProcurementCategory:
+                type: string
+              procurementMethodDetails:
+                type: string
+              additionalClassifications:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    id:
+                      type: string
+                    scheme:
+                      type: string
+                    description:
+                      type: string
+          parties:
+            type: array
+            items:
+              type: object
+              properties:
+                id:
+                  type: string
+                name:
+                  type: string
+                roles:
+                  type: array
+                  items:
+                    type: string
+                address:
+                  type: object
+                  properties:
+                    locality:
+                      type: string
+                    postalCode:
+                      type: string
+                    countryName:
+                      type: string
+                    streetAddress:
+                      type: string
+                details:
+                  type: object
+                  properties:
+                    url:
+                      type: string
+                    vcse:
+                      type: boolean
+                    scale:
+                      type: string
+                identifier:
+                  type: object
+                  properties:
+                    id:
+                      type: string
+                    scheme:
+                      type: string
+                    legalName:
+                      type: string
+                contactPoint:
+                  type: object
+                  properties:
+                    name:
+                      type: string
+                    email:
+                      type: string
+                    telephone:
+                      type: string
+          language:
+            type: string
+          planning:
+            type: object
+            properties:
+              budget:
+                type: object
+                properties:
+                  budgetBreakdown:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          type: string
+                        amount:
+                          type: object
+                          properties:
+                            amount:
+                              type: number
+                            currency:
+                              type: string
+                        period:
+                          type: object
+                          properties:
+                            endDate:
+                              type: string
+                            startDate:
+                              type: string
+                        description:
+                          type: string
+              documents:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    id:
+                      type: string
+                    url:
+                      type: string
+                    format:
+                      type: string
+                    language:
+                      type: string
+                    description:
+                      type: string
+                    dateModified:
+                      type: string
+                    documentType:
+                      type: string
+                    datePublished:
+                      type: string
+              milestones:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    id:
+                      type: string
+                    type:
+                      type: string
+                    title:
+                      type: string
+                    dueDate:
+                      type: string
+          initiationType:
+            type: string
+version: 0.57.0
+metadata:
+  autoImportSchema:
+    tenders: true
